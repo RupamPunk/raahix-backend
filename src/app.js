@@ -2,6 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const { errorHandler } = require('./middlewares/error.middleware');
 
+// Setup all Sequelize associations
+const setupAssociations = require('./models/associations');
+setupAssociations();
+
 const app = express();
 
 // Middlewares
