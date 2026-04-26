@@ -4,6 +4,9 @@ const AdminModel = require('../models/admin.model');
 
 class AdminService {
     static async register(data) {
+        // Only extract columns that exist in the admins table.
+        // bus_code_number / service_type from the frontend are intentionally
+        // ignored here — those columns do NOT exist in the admins table.
         const { name, phone, email, password, admin_type, u_id, school_name, city } = data;
 
         // Basic validation
@@ -29,13 +32,19 @@ class AdminService {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Save
+        // Save — only pass columns that exist in DB
         const newAdmin = await AdminModel.create({
-            name, phone, email, password: hashedPassword, admin_type, u_id, school_name, city
+            name, phone, email,
+            password: hashedPassword,
+            admin_type,
+            u_id: u_id || null,
+            school_name: school_name || null,
+            city: city || null
         });
 
         return newAdmin;
     }
+
 
     static async login(emailOrPhone, password) {
         if (!emailOrPhone || !password) {

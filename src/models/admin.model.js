@@ -21,16 +21,18 @@ class AdminModel {
     }
 
     static async create(adminData) {
-        const { name, phone, email, password, admin_type, u_id, school_name, city, bus_code_number, service_type } = adminData;
+        const { name, phone, email, password, admin_type, u_id, school_name, city } = adminData;
         
+        // Only insert columns that exist in the admins table.
+        // bus_code_number and service_type are NOT in the schema — they live on the bus/org records.
         const query = `
             INSERT INTO admins 
-            (name, phone, email, password, admin_type, u_id, school_name, city, bus_code_number, service_type) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-            RETURNING id, name, email, admin_type
+            (name, phone, email, password, admin_type, u_id, school_name, city) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+            RETURNING id, name, email, admin_type, u_id, school_name
         `;
         
-        const values = [name, phone, email, password, admin_type, u_id, school_name, city, bus_code_number, service_type];
+        const values = [name, phone, email, password, admin_type, u_id || null, school_name || null, city || null];
         const { rows } = await db.query(query, values);
         return rows[0];
     }
