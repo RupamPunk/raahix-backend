@@ -21,8 +21,12 @@ router.post('/verify-otp', async (req, res) => {
         const result = await DriverService.verifyDriverLogin(mobile_number, otp, dev_bypass);
         res.json(result);
     } catch (error) {
-        res.status(401).json({ error: error.message });
+        res.status(401).json({ 
+            success: false, 
+            message: error.message 
+        });
     }
+
 });
 
 // Protected routes (require authentication)

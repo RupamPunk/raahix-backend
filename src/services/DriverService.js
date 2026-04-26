@@ -43,12 +43,11 @@ class DriverService {
     
     // Verify OTP and login driver
     static async verifyDriverLogin(mobileNumber, otp, devBypass = false) {
-        // Verify OTP (skip if devBypass is true)
-        if (!devBypass) {
-            const isValid = await verifyOTP(mobileNumber, otp, 'driver');
-            if (!isValid) {
-                throw new Error('Invalid or expired OTP');
-            }
+        // Verify OTP using the centralized OTP Service
+        const isValid = verifyOTP(mobileNumber, otp, 'driver', devBypass);
+        
+        if (!isValid) {
+            throw new Error('Invalid OTP');
         }
         
         // Get driver details
@@ -86,6 +85,7 @@ class DriverService {
         
         return {
             success: true,
+            message: 'Login successful',
             token,
             driver: {
                 id: driver.id,
@@ -97,6 +97,7 @@ class DriverService {
             }
         };
     }
+
     
     // Get driver trips history
     static async getDriverTrips(driverId) {
