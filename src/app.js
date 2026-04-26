@@ -8,8 +8,22 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Base Routes
+app.get('/', (req, res) => {
+    res.send('Backend is live');
+});
+
+app.get('/test', (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'API is working correctly',
+        timestamp: new Date().toISOString()
+    });
+});
+
 // Routes
 app.use('/admin', require('./routes/admin.routes'));
+
 app.use('/api/buses', require('./routes/bus.routes'));
 app.use('/api/drivers', require('./routes/driver.routes'));
 app.use('/api/v1/driver', require('./routes/v1/driver'));
