@@ -22,7 +22,9 @@ app.get('/test', (req, res) => {
 });
 
 // Routes
+app.use('/driver', require('./routes/driverRoutes')); // Standard path for Flutter app
 app.use('/admin', require('./routes/admin.routes'));
+
 
 app.use('/api/buses', require('./routes/bus.routes'));
 app.use('/api/drivers', require('./routes/driver.routes'));
