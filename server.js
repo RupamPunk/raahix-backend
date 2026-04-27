@@ -2,33 +2,37 @@ require('dotenv').config();
 const app = require('./src/app');
 const { pool } = require('./src/config/db');
 
-// Render uses process.env.PORT, default to 10000 for local development if needed
-const PORT = process.env.PORT || 10000;
+const PORT = Number(process.env.PORT || 10000);
+const requiredEnv = ['JWT_SECRET', 'DB_HOST', 'DB_USER', 'DB_PASSWORD', 'DB_NAME', 'DB_PORT'];
+const missingEnv = requiredEnv.filter((key) => !process.env[key]);
 
-/**
- * Start Server
- * We verify the DB connection before listening to ensure the API is fully ready.
- */
+if (missingEnv.length) {
+    console.error(`❌ FATAL: Missing required environment variables: ${missingEnv.join(', ')}`);
+    process.exit(1);
+}
+
 const startServer = async () => {
     try {
-        // The db.js already tests the connection on import, 
-        // but we can do an explicit check here if we want to be certain.
         await pool.query('SELECT NOW()');
         console.log('✅ PostgreSQL: Connection verified');
 
         app.listen(PORT, '0.0.0.0', () => {
-            console.log(`
-🚀 RaahiX Backend is Live!
-📡 Port: ${PORT}
-🔗 URL: http://localhost:${PORT}
-🕒 Time: ${new Date().toLocaleString()}
-            `);
+            console.log(`🚀 RaahiX Backend is Live on port ${PORT}`);
         });
     } catch (err) {
-        console.error('❌ CRITICAL ERROR: Could not start server:', err.message);
+        console.error('❌ CRITICAL ERROR: Could not start server:', err.stack || err);
         process.exit(1);
     }
 };
+
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    process.exit(1);
+});
 
 startServer();
 
