@@ -14,7 +14,12 @@ router.post('/verify-otp', async (req, res) => {
     console.log('Body:', req.body);
 
     try {
-        const { mobile_number, otp, dev_bypass } = req.body;
+        let { mobile_number, otp, dev_bypass } = req.body;
+
+        // Normalize request values to strings to avoid type mismatch on raw SQL and OTP checks.
+        mobile_number = mobile_number != null ? String(mobile_number).trim() : '';
+        otp = otp != null ? String(otp).trim() : '';
+        dev_bypass = dev_bypass === true || dev_bypass === 'true';
 
         // 1. Validate input
         if (!mobile_number || !otp) {

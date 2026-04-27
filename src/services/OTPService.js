@@ -44,8 +44,9 @@ const verifyOTP = (phone, providedOTP, type, devBypass = false) => {
         return true;
     }
 
-    // Check against fixed demo OTP
-    return providedOTP === DEMO_OTP;
+    // Normalize OTP values so numeric input still matches the demo OTP.
+    const normalizedOTP = providedOTP != null ? String(providedOTP).trim() : '';
+    return normalizedOTP === DEMO_OTP;
 };
 
 module.exports = {
