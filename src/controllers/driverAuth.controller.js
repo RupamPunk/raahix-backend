@@ -6,6 +6,8 @@ const DEMO_OTP = '123456';
 
 exports.verifyDriverLogin = async (req, res) => {
     console.log('--- [INCOMING REQUEST: /driver/verify-otp] ---');
+    console.log('Method:', req.method);
+    console.log('URL:', req.url);
     console.log('Body:', req.body);
 
     try {
@@ -32,78 +34,49 @@ exports.verifyDriverLogin = async (req, res) => {
             });
         }
 
-        if (!process.env.JWT_SECRET) {
-            console.error('JWT_SECRET is not configured.');
-            return res.status(500).json({
-                success: false,
-                message: 'Server configuration error. Please contact support.'
-            });
-        }
-
-        const sql = `
-            SELECT
-                d.id, d.driver_name, d.mobile_number, d.bus_id, d.organization_id,
-                b.bus_number, b.license_plate, b.capacity, b.status AS bus_status
-            FROM drivers d
-            LEFT JOIN buses b ON b.id = d.bus_id
-            WHERE d.mobile_number = $1 AND d.is_active = true
-            LIMIT 1
-        `;
-
-        const { rows } = await pool.query(sql, [mobileNumber]);
-
-        if (!rows.length) {
-            return res.status(404).json({
-                success: false,
-                message: 'Driver not found. mobile_number is not registered or inactive.'
-            });
-        }
-
-        const driver = rows[0];
+        // TEMP: Return dummy driver data (no DB dependency)
+        const dummyDriver = {
+            id: 'dummy-uuid-123',
+            driver_name: 'Demo Driver',
+            mobile_number: mobileNumber,
+            bus_id: 'dummy-bus-uuid',
+            organization_id: 'dummy-org-uuid'
+        };
 
         const token = jwt.sign(
             {
-                driver_id: driver.id,
-                mobile: driver.mobile_number,
+                driver_id: dummyDriver.id,
+                mobile: dummyDriver.mobile_number,
                 role: 'driver',
-                bus_id: driver.bus_id,
-                organization_id: driver.organization_id
+                bus_id: dummyDriver.bus_id,
+                organization_id: dummyDriver.organization_id
             },
-            process.env.JWT_SECRET,
+            process.env.JWT_SECRET || 'fallback_secret',
             { expiresIn: '12h' }
         );
 
-        await pool.query(
-            `UPDATE drivers SET updated_at = NOW() WHERE id = $1`,
-            [driver.id]
-        );
-
-        console.log(`✅ Driver logged in: ${driver.driver_name} (${driver.mobile_number})`);
+        console.log(`✅ Driver logged in: ${dummyDriver.driver_name} (${dummyDriver.mobile_number})`);
 
         return res.status(200).json({
             success: true,
             message: 'Login successful',
             token,
             driver: {
-                id: driver.id,
-                name: driver.driver_name,
-                mobile: driver.mobile_number,
-                bus_id: driver.bus_id,
-                bus: driver.bus_id ? {
-                    bus_number: driver.bus_number,
-                    license_plate: driver.license_plate,
-                    capacity: driver.capacity,
-                    status: driver.bus_status
-                } : null
+                id: dummyDriver.id,
+                name: dummyDriver.driver_name,
+                mobile: dummyDriver.mobile_number,
+                bus_id: dummyDriver.bus_id,
+                bus: null // No bus data for demo
             }
         });
     } catch (error) {
         console.error('--- [ERROR] /driver/verify-otp ---');
-        console.error(error.stack || error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
 
         return res.status(500).json({
             success: false,
-            message: 'Something went wrong. Please try again.'
+            message: error.message || 'Something went wrong. Please try again.'
         });
     }
 };
